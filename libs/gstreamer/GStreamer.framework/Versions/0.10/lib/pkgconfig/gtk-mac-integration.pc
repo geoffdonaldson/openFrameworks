@@ -1,0 +1,11 @@
+prefix=/Library/Frameworks/GStreamer.framework/Versions/0.10
+exec_prefix=${prefix}
+libdir=/Library/Frameworks/GStreamer.framework/Versions/0.10/lib
+includedir=${prefix}/include
+
+Name: gtk-mac-integration
+Description: Mac menu bar and dock integration for GTK+
+Requires: gtk+-2.0
+Version: 1.0.1
+Libs: -L${libdir} -lgtkmacintegration
+Cflags: -I${includedir}/gtkmacintegration -DMAC_INTEGRATION

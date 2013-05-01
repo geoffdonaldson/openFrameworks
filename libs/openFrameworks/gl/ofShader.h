@@ -65,6 +65,7 @@ public:
 	void setUniform3fv(const char* name, float* v, int count = 1);
 	void setUniform4fv(const char* name, float* v, int count = 1);
 	
+    void setUniformMatrix3f(const char* name, float m[3][3]);
 	void setUniformMatrix4f(const char* name, const ofMatrix4x4 & m);
 
 	// set attributes that vary per vertex (look up the location before glBegin)

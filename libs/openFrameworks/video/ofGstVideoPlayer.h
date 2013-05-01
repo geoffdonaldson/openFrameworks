@@ -13,6 +13,9 @@ public:
 	bool 	setPixelFormat(ofPixelFormat pixelFormat);
 	ofPixelFormat	getPixelFormat();
 	
+    enum SYNC_TYPE{ SYNC_MASTER, SYNC_SLAVE };
+    void    setSync(SYNC_TYPE sType, GstClockTime bTime);
+    
 	bool 	loadMovie(string uri);
 
 	void 	update();
@@ -63,6 +66,15 @@ protected:
 	bool	allocate(int bpp);
 	void	on_stream_prepared();
 
+    static void configure_source (GstElement *src, GstPad *new_pad, ofGstVideoPlayer *app);
+    static void playbin_element_added (GstElement *playbin, GstElement *element, ofGstVideoPlayer *app);
+    static void uridecodebin_element_added(GstBin* uridecodebin, GstElement* element, ofGstVideoPlayer *app);
+    static void rtspsrc_element_added(GstBin* decodebin, GstElement* element, ofGstVideoPlayer *app);
+    static void decodebin_element_added(GstBin* decodebin, GstElement* element, ofGstVideoPlayer *app);
+    static void examine_elements(GstBin* bin, ofGstVideoPlayer *app);
+    static void examine_element(gchar* factory_name, GstElement* element, ofGstVideoPlayer *app);
+    static void rtpbin_element_added(GstBin* rtpbin, GstElement* element, ofGstVideoPlayer *app);
+    
 	// return true to set the message as attended so upstream doesn't try to process it
 	virtual bool on_message(GstMessage* msg){return false;};
 
@@ -72,6 +84,11 @@ private:
 	int 				fps_n, fps_d;
 	bool				bIsStream;
 	bool				bIsAllocated;
+    bool                bIsSynced;
+    SYNC_TYPE           syncType;
+    GstClockTime        baseTime;
 	bool				threadAppSink;
 	ofGstVideoUtils		videoUtils;
+    
+    GstElement * gstPipeline;
 };

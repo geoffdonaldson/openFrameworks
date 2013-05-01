@@ -10,6 +10,7 @@
 
 #define GST_DISABLE_DEPRECATED
 #include <gst/gstpad.h>
+#include <gst/gst.h>
 
 class ofGstAppSink;
 typedef struct _GstElement GstElement;

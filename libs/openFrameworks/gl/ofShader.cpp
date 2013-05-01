@@ -409,6 +409,12 @@ void ofShader::setUniform3fv(const char* name, float* v, int count) {
 }
 
 //--------------------------------------------------------------
+void ofShader::setUniformMatrix3f(const char* name, float m[3][3]) {
+	if(bLoaded)
+		glUniformMatrix3fv(getUniformLocation(name), 1, GL_FALSE, *m);
+}
+
+//--------------------------------------------------------------
 void ofShader::setUniform4fv(const char* name, float* v, int count) {
 	if(bLoaded)
 		glUniform4fv(getUniformLocation(name), count, v);

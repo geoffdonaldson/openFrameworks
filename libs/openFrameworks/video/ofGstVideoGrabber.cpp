@@ -54,6 +54,10 @@ extern "C" {
 
 #endif
 
+#ifdef TARGET_OSX
+#include <gst/gst.h>
+#endif
+
 static void get_video_devices (ofGstCamData & cam_data)
 {
 #ifdef TARGET_LINUX

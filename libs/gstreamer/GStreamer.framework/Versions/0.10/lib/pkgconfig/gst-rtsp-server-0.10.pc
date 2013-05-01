@@ -1,0 +1,11 @@
+prefix=/Library/Frameworks/GStreamer.framework/Versions/0.10
+exec_prefix=${prefix}
+libdir=/Library/Frameworks/GStreamer.framework/Versions/0.10/lib
+includedir=${prefix}/include/gstreamer-0.10
+
+Name: gst-rtsp-server
+Description: GStreamer based RTSP server
+Version: 0.10.8
+Requires: gstreamer-0.10 gstreamer-base-0.10
+Libs: -L${libdir} -lgstrtspserver-0.10
+Cflags: -I${includedir}

@@ -117,8 +117,7 @@ void ofGstUtils::eos_cb(){
 bool ofGstUtils::setPipelineWithSink(string pipeline, string sinkname, bool isStream){
 	ofGstUtils::startGstMainLoop();
 
-	gchar* pipeline_string =
-		g_strdup((pipeline).c_str());
+	gchar* pipeline_string = g_strdup((pipeline).c_str());
 
 	GError * error = NULL;
 	gstPipeline = gst_parse_launch (pipeline_string, &error);
@@ -233,7 +232,7 @@ bool ofGstUtils::startPipeline(){
 
 void ofGstUtils::play(){
 	setPaused(false);
-
+    
 	//this is if we set the speed first but it only can be set when we are playing.
 	if(!isStream) setSpeed(speed);
 }
@@ -555,6 +554,11 @@ void ofGstUtils::gstHandleMessage(){
 				}
 
 			break;
+            case GST_MESSAGE_CLOCK_LOST:
+                /* Get a new clock */
+                gst_element_set_state (gstPipeline, GST_STATE_PAUSED);
+                gst_element_set_state (gstPipeline, GST_STATE_PLAYING);
+                break;
 
 			default:
 				ofLogVerbose() << "GStreamer: unhandled message from " << GST_MESSAGE_SRC_NAME(msg);

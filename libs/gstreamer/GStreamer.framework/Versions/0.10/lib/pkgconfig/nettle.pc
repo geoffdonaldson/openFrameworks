@@ -1,0 +1,11 @@
+prefix=/Library/Frameworks/GStreamer.framework/Versions/0.10
+exec_prefix=${prefix}
+libdir=/Library/Frameworks/GStreamer.framework/Versions/0.10/lib
+includedir=${prefix}/include
+
+Name: Nettle
+Description: Nettle low-level cryptographic library (symmetric algorithms)
+URL: http://www.lysator.liu.se/~nisse/nettle
+Version: 2.5
+Libs: -L${libdir} -lnettle
+Cflags: -I${includedir}

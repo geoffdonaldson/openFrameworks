@@ -9,6 +9,13 @@
 /* Begin PBXBuildFile section */
 		53EEEF4B130766EF0027C199 /* ofMesh.h in Headers */ = {isa = PBXBuildFile; fileRef = 53EEEF49130766EF0027C199 /* ofMesh.h */; };
 		53EEEF4C130766EF0027C199 /* ofMesh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 53EEEF4A130766EF0027C199 /* ofMesh.cpp */; };
+		6CBBB20117319A380063E0A6 /* ofGstUtils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CBBB1FB17319A380063E0A6 /* ofGstUtils.cpp */; };
+		6CBBB20217319A380063E0A6 /* ofGstUtils.h in Headers */ = {isa = PBXBuildFile; fileRef = 6CBBB1FC17319A380063E0A6 /* ofGstUtils.h */; };
+		6CBBB20317319A380063E0A6 /* ofGstVideoGrabber.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CBBB1FD17319A380063E0A6 /* ofGstVideoGrabber.cpp */; };
+		6CBBB20417319A380063E0A6 /* ofGstVideoGrabber.h in Headers */ = {isa = PBXBuildFile; fileRef = 6CBBB1FE17319A380063E0A6 /* ofGstVideoGrabber.h */; };
+		6CBBB20517319A380063E0A6 /* ofGstVideoPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6CBBB1FF17319A380063E0A6 /* ofGstVideoPlayer.cpp */; };
+		6CBBB20617319A380063E0A6 /* ofGstVideoPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 6CBBB20017319A380063E0A6 /* ofGstVideoPlayer.h */; };
+		6CBBB20917319B4E0063E0A6 /* GStreamer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 6CBBB20817319B4E0063E0A6 /* GStreamer.framework */; };
 		772BDF73146928600030F0EE /* ofOpenALSoundPlayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 772BDF71146928600030F0EE /* ofOpenALSoundPlayer.cpp */; };
 		772BDF74146928600030F0EE /* ofOpenALSoundPlayer.h in Headers */ = {isa = PBXBuildFile; fileRef = 772BDF72146928600030F0EE /* ofOpenALSoundPlayer.h */; };
 		92C55F88132DA7DD00EC2631 /* ofPath.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 92C55F86132DA7DD00EC2631 /* ofPath.cpp */; };
@@ -141,6 +148,13 @@
 /* Begin PBXFileReference section */
 		53EEEF49130766EF0027C199 /* ofMesh.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofMesh.h; sourceTree = "<group>"; };
 		53EEEF4A130766EF0027C199 /* ofMesh.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofMesh.cpp; sourceTree = "<group>"; };
+		6CBBB1FB17319A380063E0A6 /* ofGstUtils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofGstUtils.cpp; sourceTree = "<group>"; };
+		6CBBB1FC17319A380063E0A6 /* ofGstUtils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofGstUtils.h; sourceTree = "<group>"; };
+		6CBBB1FD17319A380063E0A6 /* ofGstVideoGrabber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofGstVideoGrabber.cpp; sourceTree = "<group>"; };
+		6CBBB1FE17319A380063E0A6 /* ofGstVideoGrabber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofGstVideoGrabber.h; sourceTree = "<group>"; };
+		6CBBB1FF17319A380063E0A6 /* ofGstVideoPlayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofGstVideoPlayer.cpp; sourceTree = "<group>"; };
+		6CBBB20017319A380063E0A6 /* ofGstVideoPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofGstVideoPlayer.h; sourceTree = "<group>"; };
+		6CBBB20817319B4E0063E0A6 /* GStreamer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GStreamer.framework; path = ../../../gstreamer/GStreamer.framework; sourceTree = "<group>"; };
 		772BDF71146928600030F0EE /* ofOpenALSoundPlayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofOpenALSoundPlayer.cpp; sourceTree = "<group>"; };
 		772BDF72146928600030F0EE /* ofOpenALSoundPlayer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ofOpenALSoundPlayer.h; sourceTree = "<group>"; };
 		92C55F86132DA7DD00EC2631 /* ofPath.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofPath.cpp; sourceTree = "<group>"; };
@@ -305,6 +319,7 @@
 				E4B27C3110CBEBAB00536013 /* QuickTime.framework in Frameworks */,
 				E703368C15D4AF1A009A3FDE /* QTKit.framework in Frameworks */,
 				BBAB23BD13894D2600AA2426 /* GLUT.framework in Frameworks */,
+				6CBBB20917319B4E0063E0A6 /* GStreamer.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -338,6 +353,7 @@
 		E45BE5980E8CC70C009D7055 /* frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				6CBBB20817319B4E0063E0A6 /* GStreamer.framework */,
 				E7F985E115E0DC54003869B5 /* Accelerate.framework */,
 				E703368B15D4AF1A009A3FDE /* QTKit.framework */,
 				E703368915D4AF13009A3FDE /* CoreVideo.framework */,
@@ -415,6 +431,12 @@
 		E4B27AD510CBE92A00536013 /* video */ = {
 			isa = PBXGroup;
 			children = (
+				6CBBB1FB17319A380063E0A6 /* ofGstUtils.cpp */,
+				6CBBB1FC17319A380063E0A6 /* ofGstUtils.h */,
+				6CBBB1FD17319A380063E0A6 /* ofGstVideoGrabber.cpp */,
+				6CBBB1FE17319A380063E0A6 /* ofGstVideoGrabber.h */,
+				6CBBB1FF17319A380063E0A6 /* ofGstVideoPlayer.cpp */,
+				6CBBB20017319A380063E0A6 /* ofGstVideoPlayer.h */,
 				E4B27ADB10CBE92A00536013 /* ofVideoGrabber.cpp */,
 				E4B27ADC10CBE92A00536013 /* ofVideoGrabber.h */,
 				E4B27ADD10CBE92A00536013 /* ofVideoPlayer.cpp */,
@@ -643,6 +665,9 @@
 				E703369515D4B03E009A3FDE /* ofQTKitPlayer.h in Headers */,
 				E42732B015F10E7A00BBC533 /* ofQuickTimePlayer.h in Headers */,
 				FDFC9EF21600D70700EDD797 /* ofQTKitMovieRenderer.h in Headers */,
+				6CBBB20217319A380063E0A6 /* ofGstUtils.h in Headers */,
+				6CBBB20417319A380063E0A6 /* ofGstVideoGrabber.h in Headers */,
+				6CBBB20617319A380063E0A6 /* ofGstVideoPlayer.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -754,6 +779,9 @@
 				E703369615D4B03E009A3FDE /* ofQTKitPlayer.mm in Sources */,
 				E42732AF15F10E7A00BBC533 /* ofQuickTimePlayer.cpp in Sources */,
 				FDFC9EF31600D70700EDD797 /* ofQTKitMovieRenderer.m in Sources */,
+				6CBBB20117319A380063E0A6 /* ofGstUtils.cpp in Sources */,
+				6CBBB20317319A380063E0A6 /* ofGstVideoGrabber.cpp in Sources */,
+				6CBBB20517319A380063E0A6 /* ofGstVideoPlayer.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -766,24 +794,15 @@
 				CONFIGURATION_BUILD_DIR = "$(SRCROOT)/../../lib/osx/";
 				COPY_PHASE_STRIP = NO;
 				EXECUTABLE_PREFIX = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					/System/Library/Frameworks,
-				);
+				FRAMEWORK_SEARCH_PATHS = /Library/System/Frameworks;
+				HEADER_GSTREAMER = "\"$(OF_PATH)/libs/gstreamer/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "$(OF_CORE_HEADERS)";
 				INSTALL_PATH = /usr/local/lib;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_4)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_5)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_6)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_7)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_8)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_9)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(OF_CORE_LIBS)";
+				LIB_GSTREAMER = "\"$(OF_PATH)/libs/gstreamer\"";
 				OBJROOT = "$(SRCROOT)/../../lib/osx/build/debug/";
+				OF_CORE_HEADERS = "$(HEADER_OF) $(HEADER_GSTREAMER) $(HEADER_POCO) $(HEADER_FREETYPE) $(HEADER_FREETYPE2) $(HEADER_FMODEX) $(HEADER_GLEW) $(HEADER_FREEIMAGE) $(HEADER_TESS2) $(HEADER_CAIRO) $(HEADER_RTAUDIO)";
+				OF_CORE_LIBS = "$(LIB_GSTREAMER) $(LIB_POCO_1) $(LIB_POCO_2) $(LIB_POCO_3) $(LIB_POCO_4) $(LIB_POCO_5) $(LIB_POCO_6) $(LIB_POCO_7) $(LIB_POCO_8) $(LIB_POCO_9) $(LIB_POCO_10) $(LIB_TESS) $(LIB_GLEW) $(LIB_CAIRO1) $(LIB_CAIRO2) $(LIB_CAIRO3) $(LIB_FMODEX) $(LIB_RTAUDIO)";
 				OTHER_LDFLAGS = (
 					"$(LIB_POCOFOUNDATION)",
 					"$(LIB_POCONET)",
@@ -809,25 +828,16 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				EXECUTABLE_PREFIX = "";
-				FRAMEWORK_SEARCH_PATHS = (
-					"$(inherited)",
-					/System/Library/Frameworks,
-				);
+				FRAMEWORK_SEARCH_PATHS = /Library/System/Frameworks;
 				GCC_FAST_MATH = YES;
+				HEADER_GSTREAMER = "\"$(OF_PATH)/libs/gstreamer/GStreamer.framework/Headers\"";
+				HEADER_SEARCH_PATHS = "$(OF_CORE_HEADERS)";
 				INSTALL_PATH = /usr/local/lib;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_1)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_2)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_3)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_4)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_5)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_6)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_7)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_8)",
-					"$(LIBRARY_SEARCH_PATHS_QUOTED_FOR_TARGET_9)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(OF_CORE_LIBS)";
+				LIB_GSTREAMER = "\"$(OF_PATH)/libs/gstreamer\"";
 				OBJROOT = "$(SRCROOT)/../../lib/osx/build/release/";
+				OF_CORE_HEADERS = "$(HEADER_OF) $(HEADER_GSTREAMER) $(HEADER_POCO) $(HEADER_FREETYPE) $(HEADER_FREETYPE2) $(HEADER_FMODEX) $(HEADER_GLEW) $(HEADER_FREEIMAGE) $(HEADER_TESS2) $(HEADER_CAIRO) $(HEADER_RTAUDIO)";
+				OF_CORE_LIBS = "$(LIB_GSTREAMER) $(LIB_POCO_1) $(LIB_POCO_2) $(LIB_POCO_3) $(LIB_POCO_4) $(LIB_POCO_5) $(LIB_POCO_6) $(LIB_POCO_7) $(LIB_POCO_8) $(LIB_POCO_9) $(LIB_POCO_10) $(LIB_TESS) $(LIB_GLEW) $(LIB_CAIRO1) $(LIB_CAIRO2) $(LIB_CAIRO3) $(LIB_FMODEX) $(LIB_RTAUDIO)";
 				OTHER_LDFLAGS = (
 					"$(LIB_POCOFOUNDATION)",
 					"$(LIB_POCONET)",
