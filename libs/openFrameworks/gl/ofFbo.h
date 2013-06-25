@@ -32,6 +32,7 @@ public:
 	void setUseTexture(bool bUseTex){ /*irrelevant*/ };
 
 	void begin(bool setupScreen=true);
+    void beginFlip(bool setupScreen=true);
 	void end();
 
 	void readToPixels(ofPixels & pixels, int attachmentPoint = 0);

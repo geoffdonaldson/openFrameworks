@@ -108,7 +108,7 @@ void ofGstVideoPlayer::uridecodebin_element_added(GstBin* uridecodebin, GstEleme
     
     factory_name = GST_PLUGIN_FEATURE_NAME(factory);
     
-    cout << "URIDECODEBIN: " << factory_name << endl;
+    //cout << "URIDECODEBIN: " << factory_name << endl;
 
     
     if (g_str_has_prefix(factory_name, "decodebin")) {
@@ -135,7 +135,7 @@ void ofGstVideoPlayer::rtspsrc_element_added(GstBin* decodebin, GstElement* elem
     
     factory_name = GST_PLUGIN_FEATURE_NAME(factory);
     {
-        cout << "RTSPSRC: " << factory_name << endl;
+        //cout << "RTSPSRC: " << factory_name << endl;
         examine_element(factory_name, element, app);
         
         if (g_str_has_prefix(factory_name, "gstrtpbin")) {
@@ -170,7 +170,7 @@ void ofGstVideoPlayer::decodebin_element_added(GstBin* decodebin, GstElement* el
             app->has_jpegdec = TRUE;
         }
         */
-        cout << "DECODEBIN: " << factory_name << endl;
+        //cout << "DECODEBIN: " << factory_name << endl;
         examine_element(factory_name, element, app);
         
         /* We reevaluate if this is a live pipeline by determining if the user explicitly set it or if they have all the trappings of one. */
@@ -200,7 +200,7 @@ void ofGstVideoPlayer::rtpbin_element_added(GstBin* rtpbin, GstElement* element,
     factory_name = GST_PLUGIN_FEATURE_NAME(factory);
     
     {
-        cout << "RTPBIN: " << factory_name << endl;
+        //cout << "RTPBIN: " << factory_name << endl;
         examine_element(factory_name, element, app);
     }
 }
@@ -280,41 +280,42 @@ void ofGstVideoPlayer::examine_element(gchar* factory_name, GstElement* element,
         g_object_set(element, "automatic-redirect", TRUE, NULL);
         
     } else if (g_str_has_prefix(factory_name, "udpsrc")) {
-        //g_object_set(element, "buffer-size", 1000, NULL);
+        
+        //g_object_set(element, "buffer-size", 10000, NULL);
         //g_object_set(element, " do-timestamp", TRUE, NULL);
         
     } else if (g_str_has_prefix(factory_name, "rtspsrc")) {
+        
         g_object_set(element, "latency", 0, NULL);
         g_object_set(element, "buffer-mode", 0, NULL);
+        g_object_set(element, "udp-buffer-size", 1500000, NULL);
         //g_object_set(element, "drop-on-latency", TRUE, NULL);
-        g_object_set(element, "udp-buffer-size", 150000, NULL);
         //g_object_set(element, "debug", TRUE, NULL);
 
     } else if (g_str_has_prefix(factory_name, "uridecodebin")) {
-        g_object_set(element, "buffer-duration", 0, NULL);
+        //g_object_set(element, "buffer-duration", 0, NULL);
         
     } else if (g_str_has_prefix(factory_name, "gstrtpbin")) {
+        
         g_object_set(element, "buffer-mode", 0, NULL);
         g_object_set(element, "latency", 0, NULL);
         //g_object_set(element, "use-pipeline-clock", TRUE, NULL);
-
+        
     } else if (g_str_has_prefix(factory_name, "ffdec_h264")) {
         g_object_set(element, "max-threads", 0, NULL);
         
     } else if (g_str_has_prefix(factory_name, "gstrtpjitterbuffer")) {
-        //g_object_set(element, "drop-on-latency", TRUE, NULL);
-        //g_object_set(element, "latency", 0, NULL);
-        //g_object_set(element, "mode", 0, NULL);
-        //g_object_set(element, "do-lost", TRUE, NULL);
+        //g_object_set(element, "drop-on-latency", false, NULL);
+        //g_object_set(element, "latency", 60, NULL);
+        g_object_set(element, "mode", 0, NULL);
+        g_object_set(element, "do-lost", TRUE, NULL);
     }
 }
-
 
 void ofGstVideoPlayer::configure_source (GstElement *src, GstPad *new_pad, ofGstVideoPlayer *app)
 {
     cout << "Configured Source!!!!! $$$$$!%@%&@%@&@%&@&@&%@$@&%$@&@@&@&@" << endl;
 }
-
 
 bool ofGstVideoPlayer::loadMovie(string name){
 	close();
@@ -334,8 +335,6 @@ bool ofGstVideoPlayer::loadMovie(string name){
 	g_object_set(G_OBJECT(gstPipeline), "uri", name.c_str(), (void*)NULL);
         
     g_signal_connect(gstPipeline, "element-added", G_CALLBACK(playbin_element_added), this);
-
-    g_signal_connect (gstPipeline, "notify::source", G_CALLBACK (configure_source), NULL);
     
     if (bIsSynced) {
         
@@ -383,16 +382,13 @@ bool ofGstVideoPlayer::loadMovie(string name){
         }
     }
     
-    
-    
-    
 	// create the oF appsink for video rgb without sync to clock
 	GstElement * gstSink = gst_element_factory_make("appsink", "app_sink");
 
 	gst_base_sink_set_sync(GST_BASE_SINK(gstSink), true);
-    //gst_base_sink_set_async_enabled(GST_BASE_SINK(gstSink), true);
+    //gst_base_sink_set_async_enabled(GST_BASE_SINK(gstSink), false);
 	gst_app_sink_set_max_buffers(GST_APP_SINK(gstSink), 0);
-	//gst_app_sink_set_drop (GST_APP_SINK(gstSink),true);
+	//gst_app_sink_set_drop (GST_APP_SINK(gstSink),false);
     //gst_app_sink_set_emit_signals (GST_APP_SINK(gstSink), true);
         
 	gst_base_sink_set_max_lateness  (GST_BASE_SINK(gstSink), -1);

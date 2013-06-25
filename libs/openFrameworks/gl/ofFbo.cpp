@@ -618,6 +618,23 @@ void ofFbo::begin(bool setupScreen) {
 	bind();
 }
 
+void ofFbo::beginFlip(bool setupScreen) {
+	ofPushView();
+	if(ofGetGLRenderer()){
+		ofGetGLRenderer()->setCurrentFBO(this);
+	}
+	ofViewport(0, 0, getWidth(), getHeight(), true);
+	if(setupScreen){
+        ofOrientation orient = ofGetOrientation();
+#ifdef TARGET_OF_IPHONE
+        orient = OF_ORIENTATION_DEFAULT;
+#endif
+		ofSetupScreenPerspective(getWidth(), getHeight(), orient, true);
+	}
+	bind();
+}
+
+
 //void ofViewport(float x = 0, float y = 0, float width = 0, float height = 0, bool invertY = true);
 //void ofSetupScreenPerspective(float width = 0, float height = 0, int orientation = 0, bool vFlip = true, float fov = 60, float nearDist = 0, float farDist = 0);
 
