@@ -481,3 +481,33 @@ void ofQTKitPlayer::updateTexture(){
 	}
 }
 
+//--------------------------------------------------------------------
+void  ofQTKitPlayer::GetAudioBuf(void * buf, int64_t start, int64_t count)
+{
+    [moviePlayer GetAudioBuf:buf start:start count:count];
+}
+
+//--------------------------------------------------------------------
+AudioBufferList* ofQTKitPlayer::GetAudioBufList(int64_t start, int64_t count)
+{
+    return [moviePlayer GetAudioBufList:start count:count];
+}
+
+//--------------------------------------------------------------------
+CMSampleBufferRef ofQTKitPlayer::GetAudioCMSampleBuf(int64_t start)
+{
+    return [moviePlayer GetAudioCMSampleBuf2:start];
+}
+
+//--------------------------------------------------------------------
+float ofQTKitPlayer::GetAudioSampleRate()
+{
+    return [moviePlayer mAudioSampleRate];
+}
+
+//--------------------------------------------------------------------
+int32_t ofQTKitPlayer::GetAudioSamplesLength()
+{
+    return [moviePlayer GetAudioBufNumSamples];
+}
+

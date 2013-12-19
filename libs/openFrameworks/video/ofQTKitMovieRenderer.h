@@ -6,7 +6,7 @@
 #import <Quartz/Quartz.h>
 #import <QTKit/QTKit.h>
 #import <OpenGL/OpenGL.h>
-
+#import <CoreMedia/CoreMedia.h>
 
 @interface QTKitMovieRenderer : NSObject
 {
@@ -34,6 +34,27 @@
 	BOOL loadedFirstFrame;
 	NSArray* frameTimeValues;
 	NSCondition* synchronousSeekLock;
+    
+    
+    Float64                     mMovieDuration;                    // movie duration(in seconds)
+    
+    MovieAudioExtractionRef     mAudioExtractionSession;           // QT Audio Extraction Session Reference
+    BOOL                        mExtractionComplete;               // are we done yet?
+    SInt64                      mLocationInFile;                   // location to write new data
+    SInt64                      mSamplesRemaining;                 // how much more do we need to pull from the source?
+    SInt64                      mSamplesCompleated;                // hom much have we done - used to drive progress UI
+    SInt64                      mTotalNumberOfSamples;             // total number of samples to extract
+    
+    AudioStreamBasicDescription mSourceASBD;                       // audio stream basic description of the source movie
+    AudioStreamBasicDescription mOutputASBD;                       // the asbd we're asking for
+    AudioChannelLayout *        mExtractionLayoutPtr;              // the audio channel layout of the source
+    UInt32                      mExtractionLayoutSize;             // the size of the audio chanel layout
+    SInt32                      mAudioTimeScale;
+    Float64                     mAudioSampleRate;
+    
+    AudioBufferList*            mAudioBufList;
+    
+    
 }
 
 @property (nonatomic, readonly) NSSize movieSize;
@@ -60,6 +81,9 @@
 @property (nonatomic, readonly) GLuint textureID;
 @property (nonatomic, readonly) GLenum textureTarget;
 
+@property (nonatomic, readwrite) Float64 mAudioSampleRate;
+
+
 - (NSDictionary *)pixelBufferAttributes;
 
 - (void)draw:(NSRect)drawRect;
@@ -82,5 +106,13 @@
 - (void)frameFailed;
 
 - (void)synchronizeSeek;
+
+- (void) GetAudioBuf:(void *)buf start:(int64_t) start count:(int64_t) count;
+- (UInt32) GetAudioBufNumSamples;
+- (AudioBufferList*) GetAudioBufList:(int64_t) start count:(int64_t)count;
+- (CMSampleBufferRef) GetAudioCMSampleBuf2:(int64_t) start;
+
+- (CMSampleBufferRef) GetAudioCMSampleBuf:(int64_t) start;
+
 
 @end

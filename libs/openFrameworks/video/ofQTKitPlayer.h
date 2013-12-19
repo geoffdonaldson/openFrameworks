@@ -4,6 +4,8 @@
 #pragma once
 
 #include "ofMain.h"
+#include <CoreAudio/CoreAudio.h>
+#include <CoreMedia/CoreMedia.h>
 
 #ifdef __OBJC__
  #import "ofQTKitMovieRenderer.h"
@@ -113,6 +115,14 @@ class ofQTKitPlayer  : public ofBaseVideoPlayer {
 		void                nextFrame();
 		void                previousFrame();
 
+        //CMSampleBufferRef   getAudioBuffer();
+    
+        void  GetAudioBuf(void * buf, int64_t start, int64_t count);
+        AudioBufferList* GetAudioBufList(int64_t start, int64_t count);
+        CMSampleBufferRef GetAudioCMSampleBuf(int64_t start);
+        float GetAudioSampleRate();
+        int32_t  GetAudioSamplesLength();
+    
 	protected:
     
         ofLoopType currentLoopState;

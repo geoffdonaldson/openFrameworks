@@ -49,6 +49,8 @@ typedef struct OpenGLTextureCoordinates OpenGLTextureCoordinates;
 @synthesize frameCount;
 @synthesize justSetFrame;
 @synthesize synchronousSeek;
+@synthesize mAudioSampleRate;
+
 
 - (NSDictionary*) pixelBufferAttributes
 {
@@ -184,12 +186,22 @@ typedef struct OpenGLTextureCoordinates OpenGLTextureCoordinates;
 	// http://opensource.apple.com/source/WebCore/WebCore-1298/platform/graphics/win/QTMovie.cpp
 	hasVideo = (NULL != GetMovieIndTrackType([_movie quickTimeMovie], 1, VisualMediaCharacteristic, movieTrackCharacteristic | movieTrackEnabledOnly));
 	hasAudio = (NULL != GetMovieIndTrackType([_movie quickTimeMovie], 1, AudioMediaCharacteristic,  movieTrackCharacteristic | movieTrackEnabledOnly));
-//	NSLog(@"has video? %@ has audio? %@", (hasVideo ? @"YES" : @"NO"), (hasAudio ? @"YES" : @"NO") );
+	NSLog(@"has video? %@ has audio? %@", (hasVideo ? @"YES" : @"NO"), (hasAudio ? @"YES" : @"NO") );
 	loadedFirstFrame = NO;
 	self.volume = 1.0;
 	self.loops = YES;
     self.palindrome = NO;
 
+    if (hasAudio) {
+        
+        mAudioBufList = NULL;
+        [self configureExtractionSessionWithMovie:[_movie quickTimeMovie]];
+        
+        NSLog(@"Setting up audio export...");
+    }
+    
+    
+    
 	return YES;
 }
 
@@ -230,6 +242,15 @@ typedef struct OpenGLTextureCoordinates OpenGLTextureCoordinates;
 			[frameTimeValues release];
 			frameTimeValues = NULL;
 		}
+        
+        if (mAudioExtractionSession){
+            MovieAudioExtractionEnd(mAudioExtractionSession);
+        }
+        
+        if (mExtractionLayoutPtr) {
+            free(mExtractionLayoutPtr);
+        }
+        
 		
 		if(synchronousSeekLock != nil){
 			[synchronousSeekLock release];
@@ -573,12 +594,12 @@ typedef struct OpenGLTextureCoordinates OpenGLTextureCoordinates;
 	QTTime t = QTMakeTime([[frameTimeValues objectAtIndex:frame%frameTimeValues.count] longLongValue], movieDuration.timeScale);
 	QTTime startTime =[_movie frameStartTime:t];
 	QTTime endTime =[_movie frameEndTime:t];
-//	NSLog(@"calculated frame time %lld, frame start end [%lld, %lld]", t.timeValue, startTime.timeValue, endTime.timeValue);
+	//NSLog(@"calculated frame time %lld, frame start end [%lld, %lld]", t.timeValue, startTime.timeValue, endTime.timeValue);
 	if(QTTimeCompare(startTime, _movie.currentTime) != NSOrderedSame){
 		self.justSetFrame = YES;
 		_movie.currentTime = startTime;
-//		//		NSLog(@"set time to %f", 1.0*_movie.currentTime.timeValue / _movie.currentTime.timeScale);
-//  NSLog(@"nsorderedsame calculated frame time %lld, frame start end [%lld, %lld]", t.timeValue, startTime.timeValue, endTime.timeValue);
+		//NSLog(@"set time to %f", 1.0*_movie.currentTime.timeValue / _movie.currentTime.timeScale);
+        //NSLog(@"nsorderedsame calculated frame time %lld, frame start end [%lld, %lld]", t.timeValue, startTime.timeValue, endTime.timeValue);
 		[self synchronizeSeek];
 	}
 
@@ -697,5 +718,414 @@ typedef struct OpenGLTextureCoordinates OpenGLTextureCoordinates;
 {
 	return !self.loops && !self.palindrome && _movie.currentTime.timeValue == movieDuration.timeValue;
 }
+
+
+/*!
+ @method
+ @abstract   Calcurate exporting movie duration (in Sec.)
+ @discussion
+ calculate the duration of the longest audio track in the movie
+ if the audio tracks end at time N and the movie is much
+ longer we don't want to keep extracting - the API will happily
+ return zeroes until it reaches the movie duration
+ */
+-(void)setMovieExtractionDuration
+{
+    TimeValue maxDuration = 0;
+    UInt8 i;
+    
+    SInt32 trackCount = GetMovieTrackCount([_movie quickTimeMovie]);
+    
+    if (trackCount) {
+        for (i = 1; i < trackCount + 1; i++) {
+            Track aTrack = GetMovieIndTrackType([_movie quickTimeMovie],
+                                                i,
+                                                SoundMediaType,
+                                                movieTrackMediaType);
+            if (aTrack) {
+                TimeValue aDuration = GetTrackDuration(aTrack);
+                mAudioTimeScale = GetMediaTimeScale(GetTrackMedia(aTrack));
+                
+                if (aDuration > maxDuration) maxDuration = aDuration;
+            }
+        }
+        
+        mMovieDuration = (Float64)maxDuration / (Float64)GetMovieTimeScale([_movie quickTimeMovie]);
+    }
+}
+
+
+
+/*!
+ @method
+ @abstract   Get default extraction layout
+ @discussion
+ get the default extraction layout for this movie, expanded into individual channel descriptions
+ 
+ @discussion
+ The channel layout returned by this routine must be deallocated by the client
+ If 'asbd' is non-NULL, fill it with the default extraction asbd, which contains the
+ highest sample rate among the sound tracks that will be contributing.
+ 'outLayoutSize' and 'asbd' may be nil.
+ */
+- (OSStatus)getDefaultExtractionInfo
+{
+    OSStatus err;
+    
+    // get the size of the extraction output layout
+    err = MovieAudioExtractionGetPropertyInfo(mAudioExtractionSession,
+                                              kQTPropertyClass_MovieAudioExtraction_Audio,
+                                              kQTMovieAudioExtractionAudioPropertyID_AudioChannelLayout,
+                                              NULL,
+                                              &mExtractionLayoutSize,
+                                              NULL);
+    if (err) goto bail;
+    
+    // allocate memory for the layout
+    mExtractionLayoutPtr = (AudioChannelLayout *)calloc(1, mExtractionLayoutSize);
+    if (NULL == mExtractionLayoutPtr)  { err = memFullErr; goto bail; }
+    
+    // get the layout for the current extraction configuration
+    err = MovieAudioExtractionGetProperty(mAudioExtractionSession,
+                                          kQTPropertyClass_MovieAudioExtraction_Audio,
+                                          kQTMovieAudioExtractionAudioPropertyID_AudioChannelLayout,
+                                          mExtractionLayoutSize,
+                                          mExtractionLayoutPtr,
+                                          NULL);
+    if (err) {
+        goto bail;
+    }
+    // get the audio stream basic description
+    err = MovieAudioExtractionGetProperty(mAudioExtractionSession,
+                                          kQTPropertyClass_MovieAudioExtraction_Audio,
+                                          kQTMovieAudioExtractionAudioPropertyID_AudioStreamBasicDescription,
+                                          sizeof(AudioStreamBasicDescription),
+                                          &mSourceASBD,
+                                          NULL);
+    
+bail:
+    return err;
+}
+
+
+/*!
+ @method
+ @abstract   Sets up extraction settings
+ @discussion
+ This method prepare the specified movie for extraction by opening an extraction session, configuring
+ and setting the output ASBD and the output layout if one exists - it also sets the start time to 0
+ and calculates the total number of samples to export
+ */
+- (OSStatus) configureExtractionSessionWithMovie:(Movie)inMovie
+{
+    OSStatus err;
+    
+    // open a movie audio extraction session
+    err = MovieAudioExtractionBegin(inMovie, 0, &mAudioExtractionSession);
+    if (err) goto bail;
+    
+    err = [self getDefaultExtractionInfo];
+    if (err) goto bail;
+    
+    /*
+     Setting up extraction format.
+     
+     set the output ASBD to 16-bit interleaved PCM big-endian integers
+     we start with the default ASBD which has set the sample rate to the
+     highest rate among all audio tracks
+     */
+    // lazy hack: set the movie time scale to same as the sample rate, to allow for easy seeking
+    SetMovieTimeScale([_movie quickTimeMovie], (TimeScale)mSourceASBD.mSampleRate);
+    mAudioSampleRate = mSourceASBD.mSampleRate;
+    
+    [self setMovieExtractionDuration];
+    
+    mOutputASBD = mSourceASBD;
+    
+    mOutputASBD.mFormatID                   = kAudioFormatLinearPCM;
+    //mOutputASBD.mFormatFlags                = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsBigEndian | kAudioFormatFlagIsPacked;
+    mOutputASBD.mFormatFlags                = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
+    mOutputASBD.mFramesPerPacket            = 1;
+    mOutputASBD.mBitsPerChannel             = sizeof(int16_t) * 8;
+    mOutputASBD.mBytesPerFrame              = 2 * sizeof(int16_t);
+    //mOutputASBD.mBytesPerPacket             = mOutputASBD.mBytesPerFrame;
+    mOutputASBD.mChannelsPerFrame           = 2;
+    
+    NSLog(@"   format flags   = %d",(unsigned int)mSourceASBD.mFormatFlags);
+    NSLog(@"   sample rate    = %f",mSourceASBD.mSampleRate);
+    NSLog(@"   b/packet       = %d",(unsigned int)mSourceASBD.mBytesPerPacket);
+    NSLog(@"   f/packet       = %d",(unsigned int)mSourceASBD.mFramesPerPacket);
+    NSLog(@"   b/frame        = %d",(unsigned int)mSourceASBD.mBytesPerFrame);
+    NSLog(@"   channels/frame = %d",(unsigned int)mSourceASBD.mChannelsPerFrame);
+    NSLog(@"   b/channel      = %d",(unsigned int)mSourceASBD.mBitsPerChannel);
+    
+    NSLog(@"   format flags   = %d",(unsigned int)mOutputASBD.mFormatFlags);
+    NSLog(@"   sample rate    = %f",mOutputASBD.mSampleRate);
+    NSLog(@"   b/packet       = %d",(unsigned int)mOutputASBD.mBytesPerPacket);
+    NSLog(@"   f/packet       = %d",(unsigned int)mOutputASBD.mFramesPerPacket);
+    NSLog(@"   b/frame        = %d",(unsigned int)mOutputASBD.mBytesPerFrame);
+    NSLog(@"   channels/frame = %d",(unsigned int)mOutputASBD.mChannelsPerFrame);
+    NSLog(@"   b/channel      = %d",(unsigned int)mOutputASBD.mBitsPerChannel);
+    
+    // set the extraction ASBD
+    err = MovieAudioExtractionSetProperty(mAudioExtractionSession,
+                                          kQTPropertyClass_MovieAudioExtraction_Audio,
+                                          kQTMovieAudioExtractionAudioPropertyID_AudioStreamBasicDescription,
+                                          sizeof(mOutputASBD),
+                                          &mOutputASBD);
+    if (err) {
+        goto bail;
+    }
+    
+    
+    //mExtractionLayoutPtr->mChannelLayoutTag             = kAudioChannelLayoutTag_Mono;
+    //mExtractionLayoutPtr->mChannelBitmap                = 0;
+    //mExtractionLayoutPtr->mNumberChannelDescriptions    = 0;
+    
+    // set the output layout
+    if (mExtractionLayoutPtr) {
+        err = MovieAudioExtractionSetProperty(mAudioExtractionSession,
+                                              kQTPropertyClass_MovieAudioExtraction_Audio,
+                                              kQTMovieAudioExtractionAudioPropertyID_AudioChannelLayout,
+                                              mExtractionLayoutSize,
+                                              mExtractionLayoutPtr);
+        if (err) {
+            goto bail;
+        }
+    }
+    
+//    
+//    // set the extraction start time - we always start at zero, but you don't have to
+//    TimeRecord startTime = { 0, 0, GetMovieTimeScale(inMovie), GetMovieTimeBase(inMovie) };
+//    
+//    err = MovieAudioExtractionSetProperty(mAudioExtractionSession,
+//                                          kQTPropertyClass_MovieAudioExtraction_Movie,
+//                                          kQTMovieAudioExtractionMoviePropertyID_CurrentTime,
+//                                          sizeof(TimeRecord), &startTime);
+//    if (err) {
+//        goto bail;
+//    }
+    
+    
+    // set the number of total samples to export
+    mSamplesRemaining = mMovieDuration ? (mMovieDuration * mOutputASBD.mSampleRate) : -1;
+    mTotalNumberOfSamples = mSamplesRemaining;
+bail:
+    return err;
+}
+
+- (void) GetAudioBuf:(void *)buf start:(int64_t) start count:(int64_t) count
+{
+    
+    OSStatus err;
+    
+    TimeRecord trec;
+    trec.scale              = GetMovieTimeScale([_movie quickTimeMovie]);
+    trec.base               = NULL;
+    trec.value.hi   = (int32_t)(start >> 32);
+    trec.value.lo   = (int32_t)((start & 0xFFFFFFFF00000000ULL) >> 32);
+
+    err = MovieAudioExtractionSetProperty(mAudioExtractionSession, kQTPropertyClass_MovieAudioExtraction_Movie, kQTMovieAudioExtractionMoviePropertyID_CurrentTime, sizeof(TimeRecord), &trec);
+    if (err) {
+        NSLog(@"  Error #: %d",(int)err);
+        printf("  QuickTime audio provider: Failed to seek in file \n");
+    }
+
+    // FIXME: hack something up to actually handle very big counts correctly,
+    // maybe with multiple buffers?
+    AudioBufferList dst_buflist;
+    dst_buflist.mNumberBuffers = 1;
+    dst_buflist.mBuffers[0].mNumberChannels = mOutputASBD.mChannelsPerFrame;
+    dst_buflist.mBuffers[0].mDataByteSize   = count * mOutputASBD.mBytesPerFrame;
+    dst_buflist.mBuffers[0].mData           = buf;
+
+    UInt32 flags;
+    UInt32 decode_count = (UInt32)count;
+    err = MovieAudioExtractionFillBuffer(mAudioExtractionSession, &decode_count, &dst_buflist, &flags);
+    //QTCheckError(qt_status, wxString(_T("QuickTime audio provider: Failed to decode audio")));
+    printf("QuickTime audio provider: Failed to decode audio \n");
+
+    if (count != decode_count)
+        printf("QuickTime audio provider: GetAudio: Warning: decoded samplecount %d not same as requested count %d \n", (uint32_t)decode_count, (uint32_t)count);
+}
+
+- (UInt32) GetAudioBufNumSamples
+{
+    QTTime t = QTMakeTime([[frameTimeValues objectAtIndex:1%frameTimeValues.count] longLongValue], movieDuration.timeScale);
+    TimeRecord trec;
+    QTGetTimeRecord(t, &trec);
+    
+    //NSLog(@"%lu",(UInt32)([_movie frameEndTime:t].timeValue - [_movie frameStartTime:t].timeValue) * mOutputASBD.mBytesPerFrame);
+    
+    return (UInt32)([_movie frameEndTime:t].timeValue - [_movie frameStartTime:t].timeValue) * mOutputASBD.mBytesPerFrame;
+}
+
+- (CMSampleBufferRef) GetAudioCMSampleBuf:(int64_t) start
+{
+    
+    AudioBufferList* bufList = [self GetAudioBufList:start];
+    
+    
+    CMSampleBufferRef buff = NULL;
+    CMFormatDescriptionRef format = NULL;
+    OSStatus error = CMAudioFormatDescriptionCreate(kCFAllocatorDefault, &mOutputASBD, 0, NULL, 0, NULL, NULL, &format);
+    
+    NSLog(@"Sample Rate: %f", mOutputASBD.mSampleRate);
+    
+    CMSampleTimingInfo timing = { CMTimeMake(1, mOutputASBD.mSampleRate), kCMTimeZero, kCMTimeInvalid };
+    error = CMSampleBufferCreate(kCFAllocatorDefault, NULL, false, NULL, NULL, format, bufList->mBuffers[0].mDataByteSize, 1, &timing, 0, NULL, &buff);
+    if ( error ) { NSLog(@"CMSampleBufferCreate returned error: %ld", error); }
+    
+    error = CMSampleBufferSetDataBufferFromAudioBufferList(buff, kCFAllocatorDefault, kCFAllocatorDefault, 0, bufList);
+    if ( error ) { NSLog(@"CMSampleBufferSetDataBufferFromAudioBufferList returned error: %ld", error); }
+
+    return buff;
+}
+
+
+- (AudioBufferList*) GetAudioBufList:(int64_t) start count:(int64_t)count
+{
+    QTTime t = QTMakeTime([[frameTimeValues objectAtIndex:start%frameTimeValues.count] longLongValue], movieDuration.timeScale);
+    TimeRecord trec;
+    QTGetTimeRecord(t, &trec);
+    
+    long long numFramesCalc = [_movie frameEndTime:t].timeValue - [_movie frameStartTime:t].timeValue;
+    
+    OSStatus err;
+    
+    NSLog(@"Start::: %lld  HI: %ld  LOW: %ld", start, trec.value.hi, trec.value.lo );
+    NSLog(@"Movie Duration.. %d  Audio TimeScale: %d", (unsigned int)GetMovieDuration([_movie quickTimeMovie]), (unsigned int) mAudioTimeScale);
+    
+    err = MovieAudioExtractionSetProperty(mAudioExtractionSession, kQTPropertyClass_MovieAudioExtraction_Movie, kQTMovieAudioExtractionMoviePropertyID_CurrentTime, sizeof(TimeRecord), &trec);
+    if (err) {
+        NSLog(@"  Error #: %d",(int)err);
+        printf("  QuickTime audio provider: Failed to seek in file \n");
+    }
+    
+    //float   numFramesF = mOutputASBD.mSampleRate * ((float) GetMovieDuration([_movie quickTimeMovie]) / (float) GetMovieTimeScale([_movie quickTimeMovie]));
+    float numFramesF = numFramesCalc; //mOutputASBD.mSampleRate/29.97; //mOutputASBD.mSampleRate * 1; //mOutputASBD.mSampleRate * ((float) 1.0 / (float) GetMovieTimeScale([_movie quickTimeMovie]));
+
+    UInt32  numFrames  = (UInt32) count;
+    NSLog(@"numFrames is %d and timeScale is %f",(unsigned int) numFrames, (float) GetMovieTimeScale([_movie quickTimeMovie]));
+    
+    // FIXME: hack something up to actually handle very big counts correctly,
+    // maybe with multiple buffers?
+
+    
+    AudioBufferList* dst_buflist = calloc(sizeof(AudioBufferList), 1);
+    
+    dst_buflist->mNumberBuffers = 1;
+    dst_buflist->mBuffers[0].mNumberChannels = mOutputASBD.mChannelsPerFrame;
+    dst_buflist->mBuffers[0].mDataByteSize   = mOutputASBD.mBytesPerFrame * numFrames;
+
+    dst_buflist->mBuffers[0].mData = calloc(mOutputASBD.mBytesPerFrame * numFrames, 1);
+    
+    //float* samples;
+    UInt32 sampleCount;
+
+
+    //samples = calloc(mAudioBufList->mBuffers[0].mDataByteSize, 1);
+    //mAudioBufList->mBuffers[0].mData = samples;
+    
+    sampleCount = numFrames * dst_buflist->mBuffers[0].mNumberChannels;
+    
+    //NSLog(@"Loaded %d samples",(unsigned int)sampleCount);
+    
+    UInt32 flags;
+    UInt32 decode_count = numFrames;
+    err = MovieAudioExtractionFillBuffer(mAudioExtractionSession, &decode_count, dst_buflist, &flags);
+    if (err) {
+        NSLog(@"   Error #: %d",(int)err);
+        NSLog(@"   Extraction flags = %d (contains %d?)",(unsigned int)flags,kQTMovieAudioExtractionComplete);
+    }
+    
+    //    if (numFrames != decode_count)
+    //        NSLog(@"QuickTime audio provider: GetAudio: Warning: decoded samplecount %d not same as requested count %d \n", (uint32_t)decode_count, (uint32_t)numFrames);
+    
+    //free(mAudioBufList->mBuffers[0].mData);
+    //free(mAudioBufList);
+    
+    return dst_buflist;
+}
+
+- (CMSampleBufferRef) GetAudioCMSampleBuf2:(int64_t) start
+{
+    
+    QTTime t = QTMakeTime([[frameTimeValues objectAtIndex:start%frameTimeValues.count] longLongValue], movieDuration.timeScale);
+    TimeRecord trec;
+    QTGetTimeRecord(t, &trec);
+    
+    long long numFramesCalc = [_movie frameEndTime:t].timeValue - [_movie frameStartTime:t].timeValue;
+    
+    OSStatus err;
+    
+//    NSLog(@"Start::: %lld  HI: %ld  LOW: %ld", start, trec.value.hi, trec.value.lo );
+//    NSLog(@"Movie Duration.. %d  Audio TimeScale: %d", (unsigned int)GetMovieDuration([_movie quickTimeMovie]), (unsigned int) mAudioTimeScale);
+    
+    err = MovieAudioExtractionSetProperty(mAudioExtractionSession, kQTPropertyClass_MovieAudioExtraction_Movie, kQTMovieAudioExtractionMoviePropertyID_CurrentTime, sizeof(TimeRecord), &trec);
+    if (err) {
+        NSLog(@"  Error #: %d",(int)err);
+        printf("  QuickTime audio provider: Failed to seek in file \n");
+    }
+    
+    //float   numFramesF = mOutputASBD.mSampleRate * ((float) GetMovieDuration([_movie quickTimeMovie]) / (float) GetMovieTimeScale([_movie quickTimeMovie]));
+    float numFramesF = numFramesCalc; //mOutputASBD.mSampleRate/29.97; //mOutputASBD.mSampleRate * 1; //mOutputASBD.mSampleRate * ((float) 1.0 / (float) GetMovieTimeScale([_movie quickTimeMovie]));
+    
+    UInt32  numFrames  = (UInt32) numFramesF;
+//    NSLog(@"numFrames is %d and timeScale is %f",(unsigned int) numFrames, (float) GetMovieTimeScale([_movie quickTimeMovie]));
+    
+    // FIXME: hack something up to actually handle very big counts correctly,
+    // maybe with multiple buffers?
+    
+    AudioBufferList* dst_buflist = calloc(sizeof(AudioBufferList), 1);
+    if (dst_buflist == NULL) {
+        NSLog(@"   Error #: I'm NULL");
+    }
+    
+    dst_buflist->mNumberBuffers = 1;
+    dst_buflist->mBuffers[0].mNumberChannels = mOutputASBD.mChannelsPerFrame;
+    dst_buflist->mBuffers[0].mDataByteSize   = mOutputASBD.mBytesPerFrame * numFrames;
+    
+    float* samples; UInt32 sampleCount;
+    samples = calloc(dst_buflist->mBuffers[0].mDataByteSize, 1);
+    
+    dst_buflist->mBuffers[0].mData = samples;
+    
+    sampleCount = numFrames * dst_buflist->mBuffers[0].mNumberChannels;
+    
+    //NSLog(@"Loaded %d samples",(unsigned int)sampleCount);
+    
+    UInt32 flags;
+    UInt32 decode_count = (UInt32)numFrames;
+    err = MovieAudioExtractionFillBuffer(mAudioExtractionSession, &decode_count, dst_buflist, &flags);
+    if (err) {
+        NSLog(@"   Error #: %d",(int)err);
+        NSLog(@"   Extraction flags = %d (contains %d?)",(unsigned int)flags,kQTMovieAudioExtractionComplete);
+    }
+    
+    //    if (numFrames != decode_count)
+    //        NSLog(@"QuickTime audio provider: GetAudio: Warning: decoded samplecount %d not same as requested count %d \n", (uint32_t)decode_count, (uint32_t)numFrames);
+    
+    CMSampleBufferRef buff = NULL;
+    CMFormatDescriptionRef format = NULL;
+    OSStatus error = CMAudioFormatDescriptionCreate(kCFAllocatorDefault, &mOutputASBD, 0, NULL, 0, NULL, NULL, &format);
+    
+//    NSLog(@"Sample Rate: %f", mOutputASBD.mSampleRate);
+    
+    CMSampleTimingInfo timing = { CMTimeMake(1, mOutputASBD.mSampleRate), kCMTimeZero, kCMTimeInvalid };
+    error = CMSampleBufferCreate(kCFAllocatorDefault, NULL, false, NULL, NULL, format, decode_count, 1, &timing, 0, NULL, &buff);
+    if ( error ) { NSLog(@"CMSampleBufferCreate returned error: %ld", error); }
+    
+    error = CMSampleBufferSetDataBufferFromAudioBufferList(buff, kCFAllocatorDefault, kCFAllocatorDefault, 0, dst_buflist);
+    if ( error ) { NSLog(@"CMSampleBufferSetDataBufferFromAudioBufferList returned error: %ld", error); }
+    
+    free(dst_buflist->mBuffers[0].mData);
+    free(dst_buflist);
+    
+    return buff;
+}
+
+
+
 
 @end
