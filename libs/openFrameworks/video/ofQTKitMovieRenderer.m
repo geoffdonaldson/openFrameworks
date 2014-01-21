@@ -847,9 +847,9 @@ bail:
     mOutputASBD.mFormatFlags                = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagsNativeEndian | kAudioFormatFlagIsPacked;
     mOutputASBD.mFramesPerPacket            = 1;
     mOutputASBD.mBitsPerChannel             = sizeof(int16_t) * 8;
-    mOutputASBD.mBytesPerFrame              = 2 * sizeof(int16_t);
-    //mOutputASBD.mBytesPerPacket             = mOutputASBD.mBytesPerFrame;
-    mOutputASBD.mChannelsPerFrame           = 2;
+    mOutputASBD.mBytesPerFrame              = mSourceASBD.mChannelsPerFrame * sizeof(int16_t);
+    mOutputASBD.mBytesPerPacket             = mOutputASBD.mBytesPerFrame;
+    mOutputASBD.mChannelsPerFrame           = mSourceASBD.mChannelsPerFrame;
     
     NSLog(@"   format flags   = %d",(unsigned int)mSourceASBD.mFormatFlags);
     NSLog(@"   sample rate    = %f",mSourceASBD.mSampleRate);
