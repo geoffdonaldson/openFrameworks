@@ -10,7 +10,6 @@
 
 @interface QTKitMovieRenderer : NSObject
 {
-	QTMovie * _movie;
 	QTVisualContextRef _visualContext;
     
 	CVOpenGLTextureCacheRef _textureCache;
@@ -20,7 +19,8 @@
 	NSSize movieSize;
 	QTTime movieDuration;
 	NSInteger frameCount;
-//	double frameStep;
+	double frameStep;
+    double frameRate;
     QTTime lastMovieTime;
 	BOOL frameUpdated;
 	BOOL useTexture;
@@ -30,7 +30,6 @@
 	BOOL justSetFrame;
 	BOOL frameIsNew;
 	BOOL hasVideo;
-	BOOL hasAudio;
 	BOOL loadedFirstFrame;
 	NSArray* frameTimeValues;
 	NSCondition* synchronousSeekLock;
@@ -54,6 +53,9 @@
     
     AudioBufferList*            mAudioBufList;
     
+    @public
+    BOOL hasAudio;
+	QTMovie * _movie;
     
 }
 
@@ -63,6 +65,8 @@
 @property (nonatomic, readonly) BOOL useAlpha;
 @property (nonatomic, readonly) NSTimeInterval duration; //duration in seconds
 @property (nonatomic, readonly) NSInteger frameCount;  //total frames
+@property (nonatomic, readonly) double frameRate;  //FPS
+
 @property (nonatomic, readonly) BOOL isFinished;  //returns true if the movie is not looping and over
 @property (readwrite) BOOL justSetFrame; //this needs to be set *before* calls to _movie.setTime to allow synchronous seeking
 @property (nonatomic, readwrite) BOOL synchronousSeek;

@@ -74,6 +74,7 @@ class ofQTKitPlayer  : public ofBaseVideoPlayer {
 		bool                getIsMovieDone();
 		int                 getTotalNumFrames();
 		int                 getCurrentFrame();
+        float               getFrameRate();
 
 		void                setPaused(bool bPaused);
 		void                setPosition(float pct);
@@ -122,7 +123,10 @@ class ofQTKitPlayer  : public ofBaseVideoPlayer {
         CMSampleBufferRef GetAudioCMSampleBuf(int64_t start);
         float GetAudioSampleRate();
         int32_t  GetAudioSamplesLength();
-    
+        bool                hasAudio();
+        void    setTimeScale(TimeScale s);
+        TimeScale getTimeScale();
+
 	protected:
     
         ofLoopType currentLoopState;

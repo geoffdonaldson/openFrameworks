@@ -378,6 +378,11 @@ ofLoopType ofQTKitPlayer::getLoopState(){
 }
 
 //--------------------------------------------------------------------
+float ofQTKitPlayer::getFrameRate(){
+	return (float) [moviePlayer frameRate];
+}
+
+//--------------------------------------------------------------------
 float ofQTKitPlayer::getSpeed(){
 	return speed;
 }
@@ -511,3 +516,13 @@ int32_t ofQTKitPlayer::GetAudioSamplesLength()
     return [moviePlayer GetAudioBufNumSamples];
 }
 
+bool ofQTKitPlayer::hasAudio(){
+    return moviePlayer->hasAudio;
+}
+void ofQTKitPlayer::setTimeScale(TimeScale s){
+    SetMovieTimeScale([moviePlayer->_movie quickTimeMovie], s);
+}
+
+TimeScale ofQTKitPlayer::getTimeScale(){
+    return GetMovieTimeScale([moviePlayer->_movie quickTimeMovie]);
+}
